@@ -4,9 +4,11 @@ import {
   Action,
   showToast,
   Toast,
+  Image,
 } from "@raycast/api";
-import React, { useState, useEffect } from "react"; // Import useEffect
-import { runCode, CodeExecutionResult, detectInstalledLanguages, DetectedLanguage } from "./utils/codeRunner"; // Import new functions and interface
+import React, { useState, useEffect } from "react"; // Removed useRef
+import { runCode, CodeExecutionResult, detectInstalledLanguages, DetectedLanguage } from "./utils/codeRunner"; 
+import { logoMap } from "./utils/imageMap"
 
 /**
  * Main Raycast command component for the Local Code Runner.
@@ -36,14 +38,13 @@ export default function Command() {
           // Set the first detected language as default
           setLanguage(detected[0].value);
           // Set initial code based on the first detected language
-          // Use non-null assertion (!) because we've checked detected.length > 0
           setInitialCode(detected[0].value!);
           toast.style = Toast.Style.Success;
           toast.title = "Languages detected!";
         } else {
           toast.style = Toast.Style.Failure;
           toast.title = "No supported languages found!";
-          toast.message = "Please ensure Node.js, Python3, Go, or Java are installed and in your PATH.";
+          toast.message = "Please ensure Node.js, Python3, or Go are installed and in your PATH.";
         }
       } catch (error: any) {
         toast.style = Toast.Style.Failure;
@@ -61,20 +62,21 @@ export default function Command() {
    * Sets initial code based on the selected language.
    */
   function setInitialCode(langValue: string) {
+    let initialCode = "";
     switch (langValue) {
       case "javascript":
-        setCode(`console.log("Hello from JavaScript!");\nlet a = 10;\nlet b = 20;\nconsole.log("Sum:", a + b);`);
+        initialCode = `console.log("Hello from JavaScript!");\nlet a = 10;\nlet b = 20;\nconsole.log("Sum:", a + b);`;
         break;
-      case "python": // Corrected to 'python' as per the value in codeRunner.ts
-        setCode(`print("Hello from Python!")\nx = 5\ny = 3\nprint(f"Product: {x * y}")`);
+      case "python":
+        initialCode = `print("Hello from Python!")\nx = 5\ny = 3\nprint(f"Product: {x * y}")`;
         break;
       case "go":
-        setCode(`package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello from Go!")\n    a, b := 7, 2\n    fmt.Printf("Division: %f\\n", float64(a) / float64(b))\n}`);
+        initialCode = `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello from Go!")\n    a, b := 7, 2\n    fmt.Printf("Division: %f\\n", float64(a) / float64(b))\n}`;
         break;
-      // Java case removed, so no default code for Java
       default:
-        setCode("");
+        initialCode = "";
     }
+    setCode(initialCode); // Update the React state
   }
 
   /**
@@ -112,7 +114,7 @@ export default function Command() {
       toast.title = "Failed to run code!";
       toast.message = error.message || "An unknown error occurred.";
       // Set an error result object in case of an uncaught exception during runCode
-      setResult({ stdout: '', stderr: '', error: error.message || 'Unknown error', command: null }); // Changed command to null
+      setResult({ stdout: '', stderr: '', error: error.message || 'Unknown error', command: null });
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +157,11 @@ export default function Command() {
           onChange={handleLanguageChange}
         >
           {availableLanguages.map((lang) => (
-            <Form.Dropdown.Item key={lang.value} title={lang.name} value={lang.value} />
+            <Form.Dropdown.Item key={lang.value} title={lang.name} value={lang.value} icon={{
+          source: logoMap[lang.value],
+          // source: `../assets/icons/${lang.value}.svg`,
+          mask: Image.Mask.RoundedRectangle,
+        }}/>
           ))}
         </Form.Dropdown>
       ) : (
@@ -164,7 +170,6 @@ export default function Command() {
           text={isLoading ? "Detecting..." : "No supported languages found."}
         />
       )}
-
 
       <Form.TextArea
         id="code"
