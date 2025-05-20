@@ -4,9 +4,6 @@ import {
   Action,
   showToast,
   Toast,
-  // Detail, // No longer needed for separate detail view
-  // useNavigation, // No longer needed for navigation
-  // popToRoot, // No longer needed
 } from "@raycast/api";
 import React, { useState } from "react";
 import { runCode, CodeExecutionResult } from "./utils/codeRunner"; // Import the code runner utility
@@ -52,6 +49,9 @@ export default function Command() {
     try {
       const executionResult = await runCode(language, code);
       setResult(executionResult); // Set the result to be displayed
+
+      // Log the command executed for development purposes
+      console.log(`[CodeRunner] Command Executed: ${executionResult.command}`);
 
       if (executionResult.error) {
         toast.style = Toast.Style.Failure;
@@ -141,7 +141,7 @@ export default function Command() {
       {result && (
         <React.Fragment>
           <Form.Separator />
-          <Form.Description title="Command Executed" text={result.command} />
+          {/* Standard Output is always shown if a result exists */}
           <Form.TextArea
             id="stdout"
             title="Standard Output"
@@ -149,20 +149,26 @@ export default function Command() {
             placeholder="No standard output."
             autoFocus={false}
           />
-          <Form.TextArea
-            id="stderr"
-            title="Standard Error"
-            value={result.stderr || "No standard error."}
-            placeholder="No standard error."
-            autoFocus={false}
-          />
-          <Form.TextArea
-            id="error"
-            title="Execution Error"
-            value={result.error || "No execution error."}
-            placeholder="No execution error."
-            autoFocus={false}
-          />
+          {/* Standard Error is shown only if stderr content exists */}
+          {result.stderr && (
+            <Form.TextArea
+              id="stderr"
+              title="Standard Error"
+              value={result.stderr}
+              placeholder="No standard error."
+              autoFocus={false}
+            />
+          )}
+          {/* Execution Error is shown only if an error message exists */}
+          {result.error && (
+            <Form.TextArea
+              id="error"
+              title="Execution Error"
+              value={result.error}
+              placeholder="No execution error."
+              autoFocus={false}
+            />
+          )}
         </React.Fragment>
       )}
     </Form>
