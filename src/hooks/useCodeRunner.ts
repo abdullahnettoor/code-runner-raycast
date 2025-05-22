@@ -1,39 +1,36 @@
-import {
-  Form,
-  ActionPanel,
-  Action,
-  showToast,
-  Toast,
-  Image,
-  LocalStorage,
-  Icon,
-} from "@raycast/api";
-import React, { useState, useEffect } from "react";
-import { runCode, CodeExecutionResult, detectInstalledLanguages, DetectedLanguage } from "./utils/codeRunner";
-import { logoMap } from "./utils/imageMap";
+// hooks/useCodeRunner.ts
+import { useState, useEffect, useCallback } from "react";
+import { showToast, Toast, LocalStorage, Image } from "@raycast/api";
+import { runCode, CodeExecutionResult, detectInstalledLanguages, DetectedLanguage } from "../utils/codeRunner";
+import { logoMap } from "../utils/imageMap";
 
 // LocalStorage Key for storing detected languages
 const LANGUAGES_STORAGE_KEY = "detected_languages";
 const LAST_USED_LANGUAGE_KEY = "lastUsedLanguage";
 
-/**
- * Main Raycast command component for the Local Code Runner.
- * Allows users to input code, select a language, and execute it locally.
- * Displays results directly within the form.
- */
-export default function Command() {
+interface UseCodeRunnerReturn {
+  code: string;
+  language: string;
+  result: CodeExecutionResult | null;
+  availableLanguages: DetectedLanguage[];
+  isInitializing: boolean;
+  isExecutingCode: boolean;
+  onCodeChange: (newCode: string) => void;
+  onLanguageChange: (newValue: string) => void;
+  onRunCode: () => Promise<void>;
+  performLanguageDetection: (showLoadingToast?: boolean) => Promise<void>; // Expose for retry button
+}
+
+export function useCodeRunner(): UseCodeRunnerReturn {
   const [code, setCode] = useState<string>("");
   const [language, setLanguage] = useState<string>("");
-  // Renamed: This tracks initial setup and explicit language re-detection
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
-  // NEW State: This tracks only the code execution process
-  const [isExecutingCode, setIsExecutingCode] = useState<boolean>(false);
-
   const [result, setResult] = useState<CodeExecutionResult | null>(null);
   const [availableLanguages, setAvailableLanguages] = useState<DetectedLanguage[]>([]);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true); // Tracks initial setup and re-detection
+  const [isExecutingCode, setIsExecutingCode] = useState<boolean>(false); // Tracks only code execution
 
   // Function to get initial code based on the selected language.
-  const getInitialCodeForLanguage = (langValue: string): string => {
+  const getInitialCodeForLanguage = useCallback((langValue: string): string => {
     switch (langValue) {
       case "javascript":
         return `console.log("Hello from JavaScript!");\nlet a = 10;\nlet b = 20;\nconsole.log("Sum:", a + b);`;
@@ -44,14 +41,14 @@ export default function Command() {
       default:
         return "";
     }
-  };
+  }, []); // Memoize as it doesn't depend on any state
 
   /**
    * Performs the language detection and updates state and local storage.
    * This is used for initial load and explicit "Detect New Languages" action.
    * @param showLoadingToast Whether to show a toast message during detection.
    */
-  async function performLanguageDetection(showLoadingToast: boolean = false) {
+  const performLanguageDetection = useCallback(async (showLoadingToast: boolean = false) => {
     setIsInitializing(true); // Set initializing to true
     let toast: Toast | undefined;
 
@@ -110,7 +107,7 @@ export default function Command() {
     } finally {
       setIsInitializing(false); // Always set initializing to false at the end of detection
     }
-  }
+  }, [getInitialCodeForLanguage]); // Memoize, depends on getInitialCodeForLanguage
 
   // Effect to initialize the extension: load languages from cache or detect
   useEffect(() => {
@@ -169,14 +166,14 @@ export default function Command() {
     }
 
     initializeExtension();
-  }, []); // Run only once on mount
+  }, [performLanguageDetection, getInitialCodeForLanguage]); // Dependencies for useEffect
 
   /**
    * Handles the execution of the code.
    * Displays toast messages for loading, success, or error.
    * Updates the result state to display output directly in the form.
    */
-  async function handleRunCode() {
+  const onRunCode = useCallback(async () => {
     setIsExecutingCode(true); // Set executing code to true
     setResult(null); // Clear previous results before new execution
 
@@ -217,12 +214,12 @@ export default function Command() {
     } finally {
       setIsExecutingCode(false); // Always set executing code to false
     }
-  }
+  }, [code, language]); // Dependencies for onRunCode
 
   /**
    * Updates the code example when the language selection changes, or triggers re-detection.
    */
-  async function handleLanguageChange(newValue: string) {
+  const onLanguageChange = useCallback(async (newValue: string) => {
     if (newValue === "detect-new-languages") {
       await performLanguageDetection(true); // Trigger re-detection with toast
       return; // Do not proceed with language change logic
@@ -237,132 +234,27 @@ export default function Command() {
     const savedCode = await LocalStorage.getItem<string>(`code_${newValue}`);
     setCode(savedCode || getInitialCodeForLanguage(newValue)); // Use saved code or default
     await LocalStorage.setItem(LAST_USED_LANGUAGE_KEY, newValue); // Save to storage
-  }
+  }, [code, language, getInitialCodeForLanguage, performLanguageDetection]); // Dependencies for onLanguageChange
 
   /**
    * Handles code changes in the TextArea.
    * Saves the code to local storage.
    */
-  const handleCodeChange = async (newCode: string) => {
+  const onCodeChange = useCallback(async (newCode: string) => {
     setCode(newCode);
     await LocalStorage.setItem(`code_${language}`, newCode); // Persist code for current language
+  }, [language]); // Dependency for onCodeChange
+
+  return {
+    code,
+    language,
+    result,
+    availableLanguages,
+    isInitializing,
+    isExecutingCode,
+    onCodeChange,
+    onLanguageChange,
+    onRunCode,
+    performLanguageDetection,
   };
-
-  // --- Render Logic based on isInitializing and availableLanguages ---
-
-  // 1. Show a general loading screen if isInitializing is true
-  if (isInitializing) {
-    return (
-      <Form isLoading={true}>
-        <Form.Description
-          title="Loading"
-          text="Detecting available languages..."
-        />
-      </Form>
-    );
-  }
-
-  // 2. If isInitializing is false, but no languages were detected at all
-  if (availableLanguages.length === 0) {
-    return (
-      <Form isLoading={false}> {/* isInitializing is false here */}
-        <Form.Description
-          title="No Supported Languages Found"
-          text="Please ensure Node.js, Python3, or Go are installed and in your system's PATH."
-        />
-        <ActionPanel>
-          <Action title="Retry Language Detection" onAction={() => performLanguageDetection(true)} />
-        </ActionPanel>
-      </Form>
-    );
-  }
-
-  // 3. If isInitializing is false and languages are available, show the main form
-  return (
-    <Form
-      isLoading={isExecutingCode} // This isLoading is for the runCode process (shows spinner on form)
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm title="Run Code" onSubmit={handleRunCode} />
-          <Action title="Clear Code" onAction={() => handleCodeChange("")} />
-          {result && result.stdout && (
-            <Action.CopyToClipboard title="Copy Standard Output" content={result.stdout} />
-          )}
-          {result && result.stderr && (
-            <Action.CopyToClipboard title="Copy Standard Error" content={result.stderr} />
-          )}
-          {result && result.error && (
-            <Action.CopyToClipboard title="Copy Error Message" content={result.error} />
-          )}
-        </ActionPanel>
-      }
-    >
-      <Form.Dropdown
-        id="language"
-        title="Language"
-        value={language}
-        onChange={handleLanguageChange}
-      >
-        {availableLanguages.map((lang) => (
-          <Form.Dropdown.Item
-            key={lang.value}
-            title={lang.name}
-            value={lang.value}
-            icon={{
-              source: logoMap[lang.value] as Image.Source,
-              mask: Image.Mask.RoundedRectangle,
-            }}
-          />
-        ))}
-        <Form.Dropdown.Item
-          key="detect-new-languages"
-          title="✨ Detect New Languages"
-          value="detect-new-languages"
-          icon={Icon.MagnifyingGlass}
-        />
-      </Form.Dropdown>
-
-      <Form.TextArea
-        id="code"
-        title="Code"
-        placeholder="Enter your code here..."
-        value={code}
-        onChange={handleCodeChange}
-        autoFocus
-        enableMarkdown
-      />
-
-      {/* Display Results Section */}
-      {result && (
-        <React.Fragment>
-          <Form.Separator />
-          <Form.TextArea
-            id="stdout"
-            title="Standard Output"
-            value={result.stdout || "No standard output."}
-            placeholder="No standard output."
-            autoFocus={false}
-          />
-          {result.stderr && (
-            <Form.TextArea
-              id="stderr"
-              title="Standard Error"
-              value={result.stderr}
-              placeholder="No standard error."
-              autoFocus={false}
-            />
-          )}
-          {result.error && (
-            <Form.TextArea
-              id="error"
-              title="Execution Error"
-              value={result.error}
-              placeholder="No execution error."
-              autoFocus={false}
-            />
-          )}
-        </React.Fragment>
-      )}
-    </Form>
-  );
 }
