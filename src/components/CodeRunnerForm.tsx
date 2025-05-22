@@ -1,11 +1,5 @@
 // components/CodeRunnerForm.tsx
-import {
-  Form,
-  ActionPanel,
-  Action,
-  Image,
-  Icon,
-} from "@raycast/api";
+import { Form, ActionPanel, Action, Image, Icon } from "@raycast/api";
 import React from "react";
 import { CodeExecutionResult, DetectedLanguage } from "../utils/codeRunner";
 import { logoMap } from "../utils/imageMap";
@@ -40,24 +34,13 @@ export const CodeRunnerForm: React.FC<CodeRunnerFormProps> = ({
         <ActionPanel>
           <Action.SubmitForm title="Run Code" onSubmit={onRunCode} />
           <Action title="Clear Code" onAction={onClearCode} />
-          {result && result.stdout && (
-            <Action.CopyToClipboard title="Copy Standard Output" content={result.stdout} />
-          )}
-          {result && result.stderr && (
-            <Action.CopyToClipboard title="Copy Standard Error" content={result.stderr} />
-          )}
-          {result && result.error && (
-            <Action.CopyToClipboard title="Copy Error Message" content={result.error} />
-          )}
+          {result && result.stdout && <Action.CopyToClipboard title="Copy Standard Output" content={result.stdout} />}
+          {result && result.stderr && <Action.CopyToClipboard title="Copy Standard Error" content={result.stderr} />}
+          {result && result.error && <Action.CopyToClipboard title="Copy Error Message" content={result.error} />}
         </ActionPanel>
       }
     >
-      <Form.Dropdown
-        id="language"
-        title="Language"
-        value={language}
-        onChange={onLanguageChange}
-      >
+      <Form.Dropdown id="language" title="Language" value={language} onChange={onLanguageChange}>
         {availableLanguages.map((lang) => (
           <Form.Dropdown.Item
             key={lang.value}

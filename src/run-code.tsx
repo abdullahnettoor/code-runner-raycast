@@ -1,10 +1,10 @@
 // commands/run-code.tsx
 import { Form, ActionPanel, Action } from "@raycast/api";
-import { useCodeRunner } from "../hooks/useCodeRunner"; // Import the custom hook
-import { CodeRunnerForm } from "../components/CodeRunnerForm"; // Import the presentational component
+import { useCodeRunner } from "./hooks/useCodeRunner"; // Import the custom hook
+import { CodeRunnerForm } from "./components/CodeRunnerForm"; // Import the presentational component
 
 /**
- * Main Raycast command component for the Local Code Runner.
+ * Main Raycast command component for the Code Runner.
  * Encapsulates the use of the custom hook and renders the form.
  */
 export default function Command() {
@@ -25,10 +25,7 @@ export default function Command() {
   if (isInitializing) {
     return (
       <Form isLoading={true}>
-        <Form.Description
-          title="Loading"
-          text="Detecting available languages..."
-        />
+        <Form.Description title="Loading" text="Detecting available languages..." />
       </Form>
     );
   }
@@ -36,7 +33,9 @@ export default function Command() {
   // 2. If isInitializing is false, but no languages were detected at all
   if (availableLanguages.length === 0) {
     return (
-      <Form isLoading={false}> {/* isInitializing is false here */}
+      <Form isLoading={false}>
+        {" "}
+        {/* isInitializing is false here */}
         <Form.Description
           title="No Supported Languages Found"
           text="Please ensure Node.js, Python3, or Go are installed and in your system's PATH."
