@@ -182,7 +182,6 @@ export async function runCode(language: string, code: string): Promise<CodeExecu
         try {
           fs.unlinkSync(file);
         } catch (cleanupError: unknown) {
-          // Changed 'any' to 'unknown'
           const errorMessage = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
           console.error(`Error cleaning up file ${file}: ${errorMessage}`);
         }
@@ -194,9 +193,6 @@ export async function runCode(language: string, code: string): Promise<CodeExecu
       }
     } catch (_dirCleanupError: unknown) {
       console.error(_dirCleanupError);
-      // Changed 'any' to 'unknown' and added '_' to ignore unused var
-      // Ignore if directory is not empty or other cleanup issues.
-      // The variable is prefixed with '_' to explicitly mark it as unused and suppress linting errors.
     }
   }
 }
