@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "code-runner",
   "title": "Code Runner",
-  "description": "",
+  "description": "A powerful Raycast extension that allows you to write and execute code snippets directly on your local machine. Get instant feedback on your code without leaving Raycast!",
   "icon": "extension-logo.png",
   "author": "abdullahnettoor",
   "categories": [
@@ -23,7 +23,7 @@
     {
       "name": "run-code",
       "title": "Run Code",
-      "description": "",
+      "description": "Execute code locally",
       "mode": "view"
     }
   ],
