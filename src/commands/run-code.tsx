@@ -1,4 +1,4 @@
-// run-code.tsx
+// commands/run-code.tsx
 import { Form, ActionPanel, Action } from "@raycast/api";
 import { useCodeRunner } from "../hooks/useCodeRunner"; // Import the custom hook
 import { CodeRunnerForm } from "../components/CodeRunnerForm"; // Import the presentational component

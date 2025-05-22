@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { showToast, Toast, LocalStorage, Image } from "@raycast/api";
 import { runCode, CodeExecutionResult, detectInstalledLanguages, DetectedLanguage } from "../utils/codeRunner";
-import { logoMap } from "../utils/imageMap";
 
 // LocalStorage Key for storing detected languages
 const LANGUAGES_STORAGE_KEY = "detected_languages";
