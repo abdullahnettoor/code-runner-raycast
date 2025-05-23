@@ -8,7 +8,7 @@ A powerful Raycast extension that allows you to write and execute code snippets 
 
 This section is for anyone who wants to use the Local Code Runner to quickly test code, learn new syntax, or automate small tasks right from their Raycast launcher.
 
-**Looking to dive into the code or contribute? Jump to the [For Developers section](https://www.google.com/search?q=%23-for-developers-extend--contribute)\!**
+**Looking to dive into the code or contribute? Jump to the [For Developers section](#for-developers:-extend-&-contribute)\!**
 
 ### ✨ What It Does
 
@@ -143,4 +143,4 @@ We welcome contributions\! If you have ideas for new features, bug fixes, or imp
 
 ### 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
